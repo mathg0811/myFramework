@@ -10,7 +10,7 @@
 | 항목 | 프로토타입(v0) 포함 | 이후 단계 |
 |------|---------------------|-----------|
 | 입력 | Video file, Image dir | USB/CSI, RTSP |
-| 태스크 | Object Detection | Instance Segmentation, VLM |
+| 태스크 | Object Detection (YOLOX, RT-DETR), Human Pose (Keypoints) | Instance Segmentation, VLM |
 | 런타임 | ONNX Runtime (CPU EP, CUDA EP), FakeBackend | Native TensorRT, Jetson(aarch64) |
 | 정밀도 | FP32, FP16 | INT8 (calibration) |
 | 파이프라인 | 스레드 기반 Producer-Consumer, batch=1 | Micro-batching, CUDA Stream, IOBinding zero-copy |
@@ -164,6 +164,7 @@ class Frame:
 ```python
 class TaskType(str, Enum):
     DETECTION = "detection"
+    KEYPOINTS = "keypoints"          # Human pose
     INSTANCE_SEGMENTATION = "instance_segmentation"
     VLM = "vlm"
 
@@ -180,6 +181,13 @@ class DetectionResult:
     detections: tuple[Detection, ...]
 
 @dataclass(frozen=True)
+class KeypointsResult:               # Human pose (COCO-17 등 스켈레톤 정의는 모델 메타로 제공)
+    task: Literal[TaskType.KEYPOINTS]
+    detections: tuple[Detection, ...]            # 사람 bbox
+    keypoints: tuple[np.ndarray, ...]            # 인스턴스별 (K, 3) = x, y(원본 픽셀), score
+    skeleton_id: str                             # "coco17" 등
+
+@dataclass(frozen=True)
 class SegmentationResult:            # 예정 — Detection 확장
     task: Literal[TaskType.INSTANCE_SEGMENTATION]
     detections: tuple[Detection, ...]
@@ -192,7 +200,7 @@ class VLMResult:                     # 예정
     structured: Mapping[str, Any] | None   # JSON 모드 출력 (스키마 검증 대상)
     finish_reason: Literal["stop", "length", "timeout", "error"]
 
-TaskResult = DetectionResult | SegmentationResult | VLMResult   # Tagged Union
+TaskResult = DetectionResult | KeypointsResult | SegmentationResult | VLMResult   # Tagged Union
 ```
 
 ### 5.3 추론 백엔드 — 런타임 경계 (`core/interfaces.py`)

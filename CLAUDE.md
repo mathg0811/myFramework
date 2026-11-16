@@ -3,7 +3,7 @@
 > 이 문서는 AI 에이전트(테크 리드 역할)와 개발자가 공유하는 **살아있는 작업 지침**이다.
 > 의사결정이 바뀌거나 새 규칙이 생기면 반드시 이 문서와 하단 Changelog를 함께 갱신한다.
 
-- 문서 버전: v0.1 (2026-11-16)
+- 문서 버전: v0.2 (2026-11-16)
 - 현재 단계: **Step 1 — 프로토타입 범위 정의 & 인터페이스 설계 (Draft)**
 - 상세 설계: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
@@ -20,14 +20,16 @@
 | D-002 | 언어: **Python first, C++/CUDA later** | 계약·테스트를 Python으로 먼저 고정, Phase 2에서 핫패스만 교체 | 2026-11-16 |
 | D-003 | 첫 태스크: **Object Detection**. 단, Segmentation·VLM이 곧 붙을 수 있도록 결과 타입/모델 인터페이스를 태스크 비종속으로 설계 | 결과는 Tagged Union, VLM은 생성형 루프를 수용하는 `TaskModel` 레벨에서 추상화 | 2026-11-16 |
 | D-004 | 주 입력: **Video file (재현 가능한 테스트)** | 기본 백프레셔 정책 = BLOCK(무손실·결정적). 라이브 소스용 DROP 정책은 인터페이스만 정의 | 2026-11-16 |
+| D-005 | 레퍼런스 모델: **YOLOX + RT-DETR (Detection)**, **Human Pose Estimation 1종 추가** (후보: RTMPose / ViTPose, Apache-2.0) | 서로 다른 아키텍처(CNN/Transformer)·태스크로 Model-Agnostic 경계를 실증. Ultralytics(AGPL) 제외. `TaskType.KEYPOINTS` 추가 | 2026-11-16 |
+| D-006 | GPU 런타임 우선순위: **ONNX Runtime(CPU/CUDA/TensorRT EP) 먼저 → Native TensorRT 백엔드는 Step 3** | 하나의 백엔드로 CPU/GPU 두 경로를 먼저 검증 | 2026-11-16 |
+| D-007 | 브랜치 전략: **Git-Flow** (`main` / `develop` / `feature/*` / `release/*` / `hotfix/*`) | 상세 규칙은 §5.1 | 2026-11-16 |
+| D-008 | GPU CI: **사용자 로컬 GPU 노트북을 self-hosted runner로 등록** (잠정, 셋업 대기) | CPU CI는 GitHub-hosted, GPU 잡은 수동/야간 트리거로 학습 작업과 충돌 회피 | 2026-11-16 |
 
 ## 3. 미결 사항 (Open Questions) — 사용자 결정 필요
-- Q-001 패키지명 (`edgevision` 가칭)
-- Q-002 Python 버전 / 패키지 매니저 (제안: Python 3.11, `uv`)
-- Q-003 첫 레퍼런스 모델과 **라이선스** (Ultralytics YOLO = AGPL-3.0 주의. 제안: YOLOX 또는 RT-DETR — Apache-2.0)
-- Q-004 GPU 런타임 우선순위 (제안: ONNX Runtime CUDA/TensorRT EP 먼저 → Native TensorRT 백엔드는 Step 3)
-- Q-005 CI에서 GPU 테스트 실행 방식 (self-hosted Windows GPU runner 유무)
-- Q-006 브랜치 전략 (제안: Trunk-based + short-lived feature 브랜치)
+- Q-001 패키지명 — 사용자 제안 `visionarchitect` 검토 중 (대안 제시함)
+- Q-002 Python 버전 / 패키지 매니저 — `uv` vs `pip` 설명 후 결정 대기 (제안: Python 3.11 + uv)
+- Q-007 Pose 모델 최종 선택 (RTMPose: 경량·엣지 친화 / ViTPose: Transformer 계열) 및 Top-down(검출→포즈) vs Bottom-up 구조
+- Q-008 리포지토리 공개 여부 (public이면 self-hosted runner 보안 정책 강화 필요)
 
 ## 4. 개발 철칙 (반드시 지킬 것)
 1. **문서 선행**: 새 모듈은 인터페이스 정의 → 문서(ARCHITECTURE.md 또는 ADR) → 계약 테스트 → 구현 순서.
@@ -45,6 +47,18 @@
 - 트러블슈팅은 `docs/troubleshooting/YYYY-MM-DD-<slug>.md`에 증상/원인/조치/재발방지로 기록
 - 아키텍처 결정은 `docs/adr/NNNN-<slug>.md`로 기록하고 위 Decision Log에 한 줄 추가
 
+### 5.1 브랜치 규칙 (Git-Flow)
+| 브랜치 | 분기 원천 | 머지 대상 | 규칙 |
+|--------|-----------|-----------|------|
+| `main` | — | — | 릴리스 태그(`vX.Y.Z`)만 존재. 직접 push 금지, 보호 브랜치 |
+| `develop` | `main` | — | 통합 브랜치. PR + CI 통과 + 리뷰 1건 필수 |
+| `feature/<issue#>-<slug>` | `develop` | `develop` | 이슈 1개 = 브랜치 1개. Squash merge |
+| `release/vX.Y.0` | `develop` | `main` + `develop` | 기능 동결, 버그픽스·문서만. 머지 후 태그 |
+| `hotfix/vX.Y.Z-<slug>` | `main` | `main` + `develop` | 트러블슈팅 문서(`docs/troubleshooting/`) 필수 동반 |
+- 커밋 메시지: Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `ci:`, `perf:`)
+- 버전: SemVer. `0.x` 동안은 인터페이스 breaking change 허용하되 CHANGELOG에 명시
+- AI 에이전트 세션 브랜치(`claude/*`)는 `feature/*`와 동일하게 취급하여 `develop`으로 PR
+
 ## 6. AI 에이전트 행동 지침
 - 제안 전에 사용자가 결정해야 할 부분이 있으면 **먼저 질문**한다.
 - 결함·누락된 예외 처리·메모리/레이턴시 병목이 보이면 능동적으로 경고하고 대안을 제시한다.
@@ -54,3 +68,4 @@
 
 ## Changelog
 - v0.1 (2026-11-16): 초안 작성. D-001~D-004 반영, Open Questions Q-001~Q-006 등록.
+- v0.2 (2026-11-16): D-005~D-008 추가(모델 3종, ORT 우선, Git-Flow, self-hosted GPU runner). Git-Flow 규칙 §5.1 추가. Q-007, Q-008 등록.
