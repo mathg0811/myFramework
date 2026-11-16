@@ -1,0 +1,2 @@
+# myFramework
+AI architecture trial
