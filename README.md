@@ -2,7 +2,7 @@
 
 **A model-agnostic, low-latency edge vision inference pipeline.**
 
-[한국어 요약 (Korean summary)](README.ko.md)
+[Korean summary](README.ko.md)
 
 Models are treated as replaceable commodities. This project focuses on the system around them:
 
