@@ -10,7 +10,7 @@
 | 항목 | 프로토타입(v0) 포함 | 이후 단계 |
 |------|---------------------|-----------|
 | 입력 | Video file, Image dir | USB/CSI, RTSP |
-| 태스크 | Object Detection (YOLOX, RT-DETR), Human Pose (Keypoints) | Instance Segmentation, VLM |
+| 태스크 | Object Detection (YOLOX, RT-DETR), Human Pose (RTMPose, Top-down) | Instance Segmentation, VLM |
 | 런타임 | ONNX Runtime (CPU EP, CUDA EP), FakeBackend | Native TensorRT, Jetson(aarch64) |
 | 정밀도 | FP32, FP16 | INT8 (calibration) |
 | 파이프라인 | 스레드 기반 Producer-Consumer, batch=1 | Micro-batching, CUDA Stream, IOBinding zero-copy |
@@ -84,7 +84,7 @@ myFramework/
 │   ├── ARCHITECTURE.md           # 본 문서
 │   ├── adr/                      # Architecture Decision Records
 │   └── troubleshooting/          # 장애/해결 이력
-├── src/edgevision/               # (패키지명 가칭, Q-001)
+├── src/visionarch/               # 
 │   ├── core/                     # ★ 계약 레이어 — numpy 외 의존성 0
 │   │   ├── types.py              #   Frame, TensorSpec, Device, Precision
 │   │   ├── results.py            #   Detection/Segmentation/VLM 결과 타입 (Tagged Union)
@@ -130,7 +130,7 @@ myFramework/
 
 ## 5. 핵심 인터페이스 초안
 
-> 아래는 **계약 정의(시그니처)** 이며 구현이 아니다. 리뷰 후 `src/edgevision/core/`에 그대로 옮긴다.
+> 아래는 **계약 정의(시그니처)** 이며 구현이 아니다. 리뷰 후 `src/visionarch/core/`에 그대로 옮긴다.
 
 ### 5.1 기본 타입 (`core/types.py`)
 
