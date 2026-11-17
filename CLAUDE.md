@@ -3,7 +3,7 @@
 > Shared working guidelines for the AI agent (acting as tech lead) and the developer.
 > Whenever a decision changes or a new rule is introduced, update this document **and** the Changelog at the bottom.
 
-- Document version: v0.6 (2026-11-17)
+- Document version: v0.7 (2026-11-17)
 - Current phase: **Step 1 — Prototype scope & interface design**
 - Detailed design: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
@@ -24,6 +24,24 @@ rewriting its core. Only one target is implemented at a time, but every change m
 3. **Safety nets** — how the system detects and contains AI failures, demonstrated with failure-injection benchmarks
 4. **Structural uncertainty handling** — the architecture itself (not individual models) makes uncertainty manageable
 
+### 1.3 Extensibility Principles (D-014)
+Adopted as guiding principles; each is detailed in `docs/ARCHITECTURE.md` when the relevant module is designed.
+
+| # | Principle | Meaning |
+|---|-----------|---------|
+| P1 | **Observation, not Frame** | Inputs are timestamped multimodal bundles (N cameras, depth, point clouds, proprioception, text). A single image is just one modality |
+| P2 | **Outputs may be actions** | `ActionResult` joins the result union; every action passes a mandatory safety shield (limits, rate limits, workspace bounds). *The model proposes, the system disposes* |
+| P3 | **Time is first-class** | Clock domains, multi-sensor synchronization, per-stage deadlines (real-time) vs throughput (offline) |
+| P4 | **Open and closed loop** | The runner supports feedback (action → environment → next observation) for robotics; video analysis is open loop |
+| P5 | **Location-agnostic compute** | Models are referenced by manifest + URI (local / S3 / GCS); backends may be local or remote; no cloud SDK in `core` |
+| P6 | **Training ⟂ inference** | Training and inference meet only at the model-artifact contract (ONNX + manifest + evaluation report). Inference never imports training code |
+
+### 1.4 Framework vs Projects (D-017)
+`visionarch` is a **framework**; concrete work is done in **projects** built on it.
+- Projects are **config-driven**: components are selected by registry name and assembled from typed, validated configs (YAML → pydantic). No project-specific code in the framework.
+- A project owns its configs, data manifests, training recipes, evaluation reports, and benchmarks (`projects/<name>/`).
+- First project (D-015): **volleyball pose** — collect and curate volleyball video data, fine-tune the pose model to improve accuracy over the pretrained baseline, deploy it through the pipeline; later extend toward robot actions in simulation.
+
 ## 2. Decision Log
 | ID | Decision | Rationale / Notes | Date |
 |----|----------|-------------------|------|
@@ -40,12 +58,16 @@ rewriting its core. Only one target is implemented at a time, but every change m
 | D-011 | Pose: **RTMPose, top-down** (detector → crop → pose) | Demonstrates multi-model graphs (model chaining). Latency scales with person count → per-frame person cap guardrail required | 2026-11-17 |
 | D-012 | Repository language: **English only**; Korean summary in `README.ko.md` only | Portfolio readiness; a single source of truth avoids translation drift. Developer ↔ agent conversation may stay in Korean. Pre-policy commit history is kept as-is | 2026-11-17 |
 | D-013 | License: **Apache-2.0** | Matches the Apache-2.0 reference models; permissive for portfolio use | 2026-11-17 |
+| D-014 | Adopt extensibility principles **P1–P6** (§1.3) | Keeps the core general enough for robotics/VLA and multimodal video while implementing one target at a time. Details designed per module | 2026-11-17 |
+| D-015 | First reference scenario: **volleyball video pose estimation**, including data collection/curation and fine-tuning; robotics comes second | Builds on detection + pose + video files (D-003–D-005), fits 4–8 GB VRAM, runs in CI without hardware | 2026-11-17 |
+| D-016 | Robotics: **simulation only** (e.g. MuJoCo / Isaac Sim) with small VLA models | No physical robot; 7B-class VLAs do not fit the target VRAM | 2026-11-17 |
+| D-017 | **Framework / project separation**, config-driven assembly (registry + typed YAML configs) | Projects reuse the framework without modifying it; experiments are reproducible from config | 2026-11-17 |
 
 ## 3. Open Questions / Pending Actions
-- Extensibility principles for robotics/VLA and multimodal video (proposed, awaiting agreement)
-- First reference scenario (sports video vs robotics simulation)
-- Training / cloud compute boundary (proposed: decoupled through the model-artifact contract)
-- Developer laptop GPU model and VRAM (input for latency/memory targets)
+- Developer laptop GPU model and VRAM (`nvidia-smi`) — input for latency/memory targets
+- Volleyball data source and its license (self-recorded vs public datasets vs broadcast footage)
+- Training environment (Windows native vs WSL2/Docker vs cloud) and training stack
+- Data/annotation tooling and dataset versioning (to be decided in the data-management design)
 - Developer action: configure branch protection for `main` and `dev`
   (require PR + status checks; approvals = 0 while working solo).
 
@@ -97,3 +119,4 @@ rewriting its core. Only one target is implemented at a time, but every change m
 - v0.4 (2026-11-17): Added D-012 (English-only repository). Translated the whole document to English. Clarified solo-developer branch protection (approvals = 0).
 - v0.5 (2026-11-17): Added issue hygiene rules (§5): living issues, split on scope drift, manual-close notes.
 - v0.6 (2026-11-17): Added vision (§1.1) and portfolio goals (§1.2); D-013 (Apache-2.0); new open questions.
+- v0.7 (2026-11-17): Added extensibility principles P1–P6 (§1.3), framework/project separation (§1.4); D-014–D-017 (volleyball pose as first project, simulation-only robotics, config-driven projects).
