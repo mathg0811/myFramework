@@ -2,7 +2,7 @@
 
 > Status: **ACCEPTED (baseline)** — merged via PR #5. Further changes go through PRs with a doc diff.
 > Related decisions: `CLAUDE.md` D-001 – D-012
-> Open follow-up: model-graph (chaining) interface for top-down pose (D-011) — see §5.8.
+> Open follow-up: model-graph (chaining) interface for top-down pose (D-011) — see §5.8 and #8.
 
 ---
 
@@ -328,7 +328,7 @@ VisionArchError
     └── NumericalInstability   # NaN / Inf
 ```
 
-### 5.8 Model graph (open — D-011)
+### 5.8 Model graph (open — D-011, tracked in #8)
 Top-down pose chains two models: `detector → crop persons → pose`. Draft direction, to be finalized in its own PR:
 - A `CompositeTaskModel` implements the same `TaskModel` Protocol, so the pipeline stays unaware of chaining.
 - Intermediate results (person boxes) pass through guardrails (`confidence_floor`, `person_cap`) *before* the second model runs.
@@ -362,9 +362,8 @@ Top-down pose chains two models: `detector → crop persons → pose`. Draft dir
 ---
 
 ## 8. Next Steps
-1. #6 — English-only repository (this change)
-2. #3 — project skeleton + CI (uv, Linux / Windows)
-3. #4 — `core` contracts in code + contract tests + `FakeBackend`
-4. Model-graph interface for top-down pose (§5.8)
-5. `pipeline/` (queue, stage, runner) + `VideoFileSource` + JSON sink + E2E tests
-6. `onnxruntime_backend` (CPU / CUDA) + first detection adapter
+1. #3 — project skeleton + CI (uv, Linux / Windows)
+2. #4 — `core` contracts in code + contract tests + `FakeBackend`
+3. #8 — model-graph interface for top-down pose (§5.8)
+4. `pipeline/` (queue, stage, runner) + `VideoFileSource` + JSON sink + E2E tests
+5. `onnxruntime_backend` (CPU / CUDA) + first detection adapter
