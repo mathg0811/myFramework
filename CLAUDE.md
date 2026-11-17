@@ -3,7 +3,7 @@
 > Shared working guidelines for the AI agent (acting as tech lead) and the developer.
 > Whenever a decision changes or a new rule is introduced, update this document **and** the Changelog at the bottom.
 
-- Document version: v0.5 (2026-11-17)
+- Document version: v0.6 (2026-11-17)
 - Current phase: **Step 1 — Prototype scope & interface design**
 - Detailed design: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
@@ -12,6 +12,17 @@
 ## 1. Project in One Sentence
 A model-agnostic, low-latency edge vision inference pipeline. Models are replaceable commodities;
 the real deliverables are **system architecture, interface contracts, defenses against AI uncertainty, and hardware optimization**.
+
+### 1.1 Vision (north star)
+A **general-purpose perception → reasoning → action framework**: it must be able to grow into robotics
+(3D perception + VLA action decisions) and multimodal video understanding (e.g. sports analysis) without
+rewriting its core. Only one target is implemented at a time, but every change must respect this extensibility.
+
+### 1.2 What the portfolio must demonstrate
+1. **Separation** — how the pipeline is decomposed and how modules run independently
+2. **Performance** — measured, reproducible latency/throughput results (benchmarks, not claims)
+3. **Safety nets** — how the system detects and contains AI failures, demonstrated with failure-injection benchmarks
+4. **Structural uncertainty handling** — the architecture itself (not individual models) makes uncertainty manageable
 
 ## 2. Decision Log
 | ID | Decision | Rationale / Notes | Date |
@@ -28,9 +39,13 @@ the real deliverables are **system architecture, interface contracts, defenses a
 | D-010 | Toolchain: **Python 3.11 + `uv`** (`uv.lock` must be committed) | Reproducible dependencies across laptop / CI / Jetson. `pyproject.toml` stays standard, so falling back to pip is possible | 2026-11-17 |
 | D-011 | Pose: **RTMPose, top-down** (detector → crop → pose) | Demonstrates multi-model graphs (model chaining). Latency scales with person count → per-frame person cap guardrail required | 2026-11-17 |
 | D-012 | Repository language: **English only**; Korean summary in `README.ko.md` only | Portfolio readiness; a single source of truth avoids translation drift. Developer ↔ agent conversation may stay in Korean. Pre-policy commit history is kept as-is | 2026-11-17 |
+| D-013 | License: **Apache-2.0** | Matches the Apache-2.0 reference models; permissive for portfolio use | 2026-11-17 |
 
 ## 3. Open Questions / Pending Actions
-- No open design questions.
+- Extensibility principles for robotics/VLA and multimodal video (proposed, awaiting agreement)
+- First reference scenario (sports video vs robotics simulation)
+- Training / cloud compute boundary (proposed: decoupled through the model-artifact contract)
+- Developer laptop GPU model and VRAM (input for latency/memory targets)
 - Developer action: configure branch protection for `main` and `dev`
   (require PR + status checks; approvals = 0 while working solo).
 
@@ -81,3 +96,4 @@ the real deliverables are **system architecture, interface contracts, defenses a
 - v0.3 (2026-11-17): Added D-009 (`visionarch`), D-010 (Python 3.11 + uv), D-011 (RTMPose top-down). Integration branch renamed `develop` → `dev`.
 - v0.4 (2026-11-17): Added D-012 (English-only repository). Translated the whole document to English. Clarified solo-developer branch protection (approvals = 0).
 - v0.5 (2026-11-17): Added issue hygiene rules (§5): living issues, split on scope drift, manual-close notes.
+- v0.6 (2026-11-17): Added vision (§1.1) and portfolio goals (§1.2); D-013 (Apache-2.0); new open questions.
