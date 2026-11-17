@@ -3,7 +3,7 @@
 > Shared working guidelines for the AI agent (acting as tech lead) and the developer.
 > Whenever a decision changes or a new rule is introduced, update this document **and** the Changelog at the bottom.
 
-- Document version: v0.4 (2026-11-17)
+- Document version: v0.5 (2026-11-17)
 - Current phase: **Step 1 — Prototype scope & interface design**
 - Detailed design: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
@@ -48,6 +48,10 @@ the real deliverables are **system architecture, interface contracts, defenses a
 
 ## 5. Workflow
 - Issue → branch → implementation + tests → PR (interface changes require a doc diff) → review → merge
+- **Issues are living records**: update the description/checklist as the situation changes. When scope drifts, close the issue with a note
+  and open a new one rather than letting it grow (one issue = one concern). Every manual close states what resolved it.
+- Closing keywords (`Closes #N`) fire only when a PR merges into the default branch (`dev`) and are evaluated at merge time;
+  if one does not fire, close the issue manually with a reference to the PR.
 - Troubleshooting records go to `docs/troubleshooting/YYYY-MM-DD-<slug>.md` (symptom / root cause / fix / prevention)
 - Architecture decisions go to `docs/adr/NNNN-<slug>.md`, with a one-line entry in the Decision Log above
 
@@ -76,3 +80,4 @@ the real deliverables are **system architecture, interface contracts, defenses a
 - v0.2 (2026-11-16): Added D-005–D-008 (reference models, ORT first, Git-Flow, self-hosted GPU runner) and branching rules §5.1.
 - v0.3 (2026-11-17): Added D-009 (`visionarch`), D-010 (Python 3.11 + uv), D-011 (RTMPose top-down). Integration branch renamed `develop` → `dev`.
 - v0.4 (2026-11-17): Added D-012 (English-only repository). Translated the whole document to English. Clarified solo-developer branch protection (approvals = 0).
+- v0.5 (2026-11-17): Added issue hygiene rules (§5): living issues, split on scope drift, manual-close notes.
